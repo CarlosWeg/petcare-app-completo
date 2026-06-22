@@ -18,7 +18,7 @@ export default function Pets() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(load, [])
+  useEffect(() => { load() }, [])
 
   const openModal = () => {
     setForm({ nome: '', especie: 'Cão', raca: '', peso: '', cliente_id: '' })

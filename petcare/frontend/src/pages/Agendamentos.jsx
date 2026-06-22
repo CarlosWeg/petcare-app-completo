@@ -35,7 +35,7 @@ export default function Agendamentos() {
     }).finally(() => setLoading(false))
   }
 
-  useEffect(load, [filtroStatus])
+  useEffect(() => { load() }, [filtroStatus])
 
   const openModal = () => {
     setForm({ pet_id: '', pet_nome: '', cliente_id: '', cliente_nome: '', servico: '', data_hora: '', preco: '', observacoes: '' })

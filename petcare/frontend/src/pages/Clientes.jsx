@@ -9,8 +9,10 @@ export default function Clientes() {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const load = () => clientesAPI.list().then(setClientes).finally(() => setLoading(false))
-  useEffect(load, [])
+  const load = () => {
+    clientesAPI.list().then(setClientes).finally(() => setLoading(false))
+  }
+  useEffect(() => { load() }, [])
 
   const openModal = () => {
     setForm({ nome: '', email: '', telefone: '', endereco: '' })
