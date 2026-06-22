@@ -11,21 +11,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	"github.com/redis/go-redis/v9"
 )
 
 type Config struct {
-	Port              string
-	MongoURI          string
-	MongoDatabase     string
-	RedisAddr         string
-	AWSRegion         string
-	SQSQueueURL       string
-	SNSTopicARN       string
+	Port               string
+	MongoURI           string
+	MongoDatabase      string
+	AWSRegion          string
+	SQSQueueURL        string
+	SNSTopicARN        string
 	LambdaFunctionName string
-	AWSAccessKeyID    string
-	AWSSecretKey      string
-	AWSSessionToken   string
+	AWSAccessKeyID     string
+	AWSSecretKey       string
+	AWSSessionToken    string
 }
 
 type AWSClients struct {
@@ -36,24 +34,17 @@ type AWSClients struct {
 
 func Load() *Config {
 	return &Config{
-		Port:              getEnv("APP_PORT", "8080"),
-		MongoURI:          getEnv("MONGO_URI", "mongodb://mongodb:27017/petcare"),
-		MongoDatabase:     getEnv("MONGO_DATABASE", "petcare"),
-		RedisAddr:         getEnv("REDIS_ADDR", "redis:6379"),
-		AWSRegion:         getEnv("AWS_REGION", "us-east-1"),
-		SQSQueueURL:       getEnv("SQS_QUEUE_URL", ""),
-		SNSTopicARN:       getEnv("SNS_TOPIC_ARN", ""),
+		Port:               getEnv("APP_PORT", "8080"),
+		MongoURI:           getEnv("MONGO_URI", "mongodb://mongodb:27017/petcare"),
+		MongoDatabase:      getEnv("MONGO_DATABASE", "petcare"),
+		AWSRegion:          getEnv("AWS_REGION", "us-east-1"),
+		SQSQueueURL:        getEnv("SQS_QUEUE_URL", ""),
+		SNSTopicARN:        getEnv("SNS_TOPIC_ARN", ""),
 		LambdaFunctionName: getEnv("LAMBDA_FUNCTION_NAME", "petcare-cloud-processar-agendamento"),
-		AWSAccessKeyID:    getEnv("AWS_ACCESS_KEY_ID", ""),
-		AWSSecretKey:      getEnv("AWS_SECRET_ACCESS_KEY", ""),
-		AWSSessionToken:   getEnv("AWS_SESSION_TOKEN", ""),
+		AWSAccessKeyID:     getEnv("AWS_ACCESS_KEY_ID", ""),
+		AWSSecretKey:       getEnv("AWS_SECRET_ACCESS_KEY", ""),
+		AWSSessionToken:    getEnv("AWS_SESSION_TOKEN", ""),
 	}
-}
-
-func NewRedisClient(cfg *Config) *redis.Client {
-	return redis.NewClient(&redis.Options{
-		Addr: cfg.RedisAddr,
-	})
 }
 
 func NewAWSClients(cfg *Config) *AWSClients {

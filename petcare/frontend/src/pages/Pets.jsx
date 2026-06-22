@@ -14,7 +14,8 @@ export default function Pets() {
 
   const load = () => {
     Promise.all([petsAPI.list(), clientesAPI.list()])
-      .then(([p, c]) => { setPets(p); setClientes(c) })
+      .then(([p, c]) => { setPets(Array.isArray(p) ? p : []); setClientes(Array.isArray(c) ? c : []) })
+      .catch(() => { setPets([]); setClientes([]) })
       .finally(() => setLoading(false))
   }
 

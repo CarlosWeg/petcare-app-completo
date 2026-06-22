@@ -16,19 +16,6 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
-    image: redis:7-alpine
-    container_name: petcare-redis
-    ports:
-      - "6379:6379"
-    networks:
-      - petcare-net
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   backend:
     build:
       context: ./backend
@@ -40,7 +27,6 @@ services:
       APP_PORT: "8080"
       MONGO_URI: "mongodb://mongodb:27017/petcare"
       MONGO_DATABASE: "petcare"
-      REDIS_ADDR: "redis:6379"
       AWS_REGION: "${AWS_REGION:-us-east-1}"
       AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-}"
       AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-}"
@@ -50,8 +36,6 @@ services:
       LAMBDA_FUNCTION_NAME: "${LAMBDA_FUNCTION_NAME:-petcare-cloud-processar-agendamento}"
     depends_on:
       mongodb:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     networks:
       - petcare-net

@@ -56,9 +56,6 @@ func (h *Handler) CreatePet(c *gin.Context) {
 		return
 	}
 
-	// Invalida cache de stats
-	h.rdb.Del(ctx, "stats")
-
 	c.JSON(http.StatusCreated, pet)
 }
 
@@ -130,6 +127,5 @@ func (h *Handler) DeletePet(c *gin.Context) {
 		return
 	}
 
-	h.rdb.Del(ctx, "stats")
 	c.JSON(http.StatusOK, gin.H{"message": "Pet removido"})
 }

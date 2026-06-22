@@ -21,9 +21,6 @@ echo ""
 echo "Aguardando MongoDB ficar pronto..."
 kubectl rollout status deployment/mongodb -n petcare --timeout=180s
 
-echo "Aguardando Redis ficar pronto..."
-kubectl rollout status deployment/redis -n petcare --timeout=180s
-
 echo "Aguardando Backend ficar pronto..."
 kubectl rollout status deployment/backend -n petcare --timeout=180s || true
 

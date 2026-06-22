@@ -31,9 +31,6 @@ func main() {
 
 	db := mongoClient.Database(cfg.MongoDatabase)
 
-	// Redis
-	rdb := config.NewRedisClient(cfg)
-
 	// AWS clients
 	awsClients := config.NewAWSClients(cfg)
 
@@ -55,7 +52,7 @@ func main() {
 	})
 
 	// Handlers
-	h := handlers.New(db, rdb, awsClients, cfg)
+	h := handlers.New(db, awsClients, cfg)
 
 	api := r.Group("/api")
 	{
@@ -79,7 +76,7 @@ func main() {
 		// Serviços
 		api.GET("/servicos", h.ListServicos)
 
-		// Stats (com cache Redis)
+		// Stats (direto do MongoDB, sem cache Redis)
 		api.GET("/stats", h.GetStats)
 	}
 

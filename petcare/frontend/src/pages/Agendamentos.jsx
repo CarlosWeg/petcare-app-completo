@@ -28,10 +28,15 @@ export default function Agendamentos() {
       clientesAPI.list(),
       servicosAPI.list(),
     ]).then(([ag, p, c, s]) => {
-      setAgendamentos(ag)
-      setPets(p)
-      setClientes(c)
-      setServicos(s)
+      setAgendamentos(Array.isArray(ag) ? ag : [])
+      setPets(Array.isArray(p) ? p : [])
+      setClientes(Array.isArray(c) ? c : [])
+      setServicos(Array.isArray(s) ? s : [])
+    }).catch(() => {
+      setAgendamentos([])
+      setPets([])
+      setClientes([])
+      setServicos([])
     }).finally(() => setLoading(false))
   }
 

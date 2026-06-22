@@ -9,7 +9,7 @@ import (
 type Pet struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	Nome      string             `bson:"nome" json:"nome" binding:"required"`
-	Especie   string             `bson:"especie" json:"especie" binding:"required"` // cão, gato, etc
+	Especie   string             `bson:"especie" json:"especie" binding:"required"`
 	Raca      string             `bson:"raca" json:"raca"`
 	Peso      float64            `bson:"peso" json:"peso"`
 	ClienteID primitive.ObjectID `bson:"cliente_id" json:"cliente_id"`
@@ -33,9 +33,9 @@ type Agendamento struct {
 	PetNome     string             `bson:"pet_nome" json:"pet_nome"`
 	ClienteID   primitive.ObjectID `bson:"cliente_id" json:"cliente_id"`
 	ClienteNome string             `bson:"cliente_nome" json:"cliente_nome"`
-	Servico     string             `bson:"servico" json:"servico" binding:"required"` // banho, tosa, consulta, etc
+	Servico     string             `bson:"servico" json:"servico" binding:"required"`
 	DataHora    time.Time          `bson:"data_hora" json:"data_hora" binding:"required"`
-	Status      string             `bson:"status" json:"status"` // pendente, confirmado, concluido, cancelado
+	Status      string             `bson:"status" json:"status"`
 	Observacoes string             `bson:"observacoes" json:"observacoes"`
 	Preco       float64            `bson:"preco" json:"preco"`
 	CreatedAt   time.Time          `bson:"created_at" json:"created_at"`
@@ -61,10 +61,9 @@ func ServicosDisponiveis() []Servico {
 }
 
 type Stats struct {
-	TotalPets          int64   `json:"total_pets"`
-	TotalClientes      int64   `json:"total_clientes"`
-	TotalAgendamentos  int64   `json:"total_agendamentos"`
-	AgendamentosHoje   int64   `json:"agendamentos_hoje"`
-	ReceitaMes         float64 `json:"receita_mes"`
-	CacheHit           bool    `json:"cache_hit"`
+	TotalPets         int64   `json:"total_pets"`
+	TotalClientes     int64   `json:"total_clientes"`
+	TotalAgendamentos int64   `json:"total_agendamentos"`
+	AgendamentosHoje  int64   `json:"agendamentos_hoje"`
+	ReceitaMes        float64 `json:"receita_mes"`
 }

@@ -37,11 +37,6 @@ spec:
                 secretKeyRef:
                   name: petcare-secrets
                   key: MONGO_URI
-            - name: REDIS_ADDR
-              valueFrom:
-                configMapKeyRef:
-                  name: petcare-config
-                  key: REDIS_ADDR
             - name: SQS_QUEUE_URL
               valueFrom:
                 secretKeyRef:

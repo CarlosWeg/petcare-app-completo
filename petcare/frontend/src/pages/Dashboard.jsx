@@ -3,7 +3,7 @@ import { statsAPI, agendamentosAPI } from '../services/api'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
 } from 'recharts'
 
 const SERVICO_CORES = {
@@ -26,25 +26,34 @@ export default function Dashboard() {
       agendamentosAPI.list()
     ]).then(([s, ag]) => {
       setStats(s)
-      setAgendamentos(ag)
+      // Garante que agendamentos é sempre um array
+      setAgendamentos(Array.isArray(ag) ? ag : [])
+    }).catch(() => {
+      setAgendamentos([])
     }).finally(() => setLoading(false))
   }, [])
 
   // Agrupa agendamentos por serviço para gráfico
-  const porServico = agendamentos.reduce((acc, ag) => {
-    acc[ag.servico] = (acc[ag.servico] || 0) + 1
-    return acc
-  }, {})
+  // Array.isArray garante que .reduce nunca falhe
+  const porServico = Array.isArray(agendamentos)
+    ? agendamentos.reduce((acc, ag) => {
+        acc[ag.servico] = (acc[ag.servico] || 0) + 1
+        return acc
+      }, {})
+    : {}
+
   const chartData = Object.entries(porServico).map(([name, value]) => ({
     name: name.replace('_', ' '),
     quantidade: value,
     fill: SERVICO_CORES[name] || '#7C3AED'
   }))
 
-  const proximos = agendamentos
-    .filter(a => new Date(a.data_hora) >= new Date() && a.status !== 'cancelado')
-    .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora))
-    .slice(0, 5)
+  const proximos = Array.isArray(agendamentos)
+    ? agendamentos
+        .filter(a => new Date(a.data_hora) >= new Date() && a.status !== 'cancelado')
+        .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora))
+        .slice(0, 5)
+    : []
 
   if (loading) return <div className="loading">Carregando dashboard...</div>
 
@@ -55,11 +64,9 @@ export default function Dashboard() {
           <h1 className="page-title">Dashboard</h1>
           <p className="page-subtitle">Visão geral do PetCare</p>
         </div>
-        {stats?.cache_hit && (
-          <span style={{ fontSize: 12, color: '#10B981', background: '#D1FAE5', padding: '4px 10px', borderRadius: 999, fontWeight: 600 }}>
-            ⚡ Cache Redis ativo
-          </span>
-        )}
+        <span style={{ fontSize: 12, color: '#10B981', background: '#D1FAE5', padding: '4px 10px', borderRadius: 999, fontWeight: 600 }}>
+          🍃 MongoDB
+        </span>
       </div>
 
       {/* Stat Cards */}
@@ -88,7 +95,7 @@ export default function Dashboard() {
                 <Tooltip />
                 <Bar dataKey="quantidade" radius={[4, 4, 0, 0]}>
                   {chartData.map((entry, i) => (
-                    <rect key={i} fill={entry.fill} />
+                    <Cell key={i} fill={entry.fill} />
                   ))}
                 </Bar>
               </BarChart>

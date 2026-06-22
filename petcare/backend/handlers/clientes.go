@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"time"
 
@@ -56,7 +55,6 @@ func (h *Handler) CreateCliente(c *gin.Context) {
 		return
 	}
 
-	h.rdb.Del(ctx, "stats")
 	c.JSON(http.StatusCreated, cliente)
 }
 
@@ -68,18 +66,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Tenta buscar do cache Redis
-	cached, err := h.rdb.Get(ctx, "stats").Result()
-	if err == nil {
-		var stats models.Stats
-		if json.Unmarshal([]byte(cached), &stats) == nil {
-			stats.CacheHit = true
-			c.JSON(http.StatusOK, stats)
-			return
-		}
-	}
-
-	// Calcula stats do MongoDB
+	// Calcula stats direto do MongoDB (sem cache Redis)
 	totalPets, _ := h.pets.CountDocuments(ctx, bson.M{})
 	totalClientes, _ := h.clientes.CountDocuments(ctx, bson.M{})
 	totalAg, _ := h.agendamentos.CountDocuments(ctx, bson.M{})
@@ -99,7 +86,9 @@ func (h *Handler) GetStats(c *gin.Context) {
 		{"$group": bson.M{"_id": nil, "total": bson.M{"$sum": "$preco"}}},
 	}
 	cursor, _ := h.agendamentos.Aggregate(ctx, pipeline)
-	var resultado []struct{ Total float64 `bson:"total"` }
+	var resultado []struct {
+		Total float64 `bson:"total"`
+	}
 	cursor.All(ctx, &resultado)
 	receita := 0.0
 	if len(resultado) > 0 {
@@ -112,12 +101,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 		TotalAgendamentos: totalAg,
 		AgendamentosHoje:  agHoje,
 		ReceitaMes:        receita,
-		CacheHit:          false,
 	}
-
-	// Salva no Redis por 60 segundos
-	data, _ := json.Marshal(stats)
-	h.rdb.Set(ctx, "stats", string(data), 60*time.Second)
 
 	c.JSON(http.StatusOK, stats)
 }

@@ -9,7 +9,10 @@ export default function Clientes() {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const load = () => clientesAPI.list().then(setClientes).finally(() => setLoading(false))
+  const load = () => clientesAPI.list()
+    .then(c => setClientes(Array.isArray(c) ? c : []))
+    .catch(() => setClientes([]))
+    .finally(() => setLoading(false))
   useEffect(load, [])
 
   const openModal = () => {

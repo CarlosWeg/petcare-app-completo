@@ -68,13 +68,10 @@ func (h *Handler) CreateAgendamento(c *gin.Context) {
 		return
 	}
 
-	// Invalida cache
-	h.rdb.Del(ctx, "stats")
-
 	// Publica evento no SNS (async, não bloqueia resposta)
 	go h.publicarEventoSNS(ag)
 
-	// Chama Lambda para processar agendamento (async)
+	// Invoca Lambda para processar agendamento (async)
 	go h.invocarLambda(ag)
 
 	c.JSON(http.StatusCreated, ag)
@@ -135,7 +132,6 @@ func (h *Handler) UpdateStatusAgendamento(c *gin.Context) {
 		go h.publicarFilaSQS(id.Hex(), body.Status)
 	}
 
-	h.rdb.Del(ctx, "stats")
 	c.JSON(http.StatusOK, gin.H{"message": "Status atualizado", "status": body.Status})
 }
 
@@ -147,11 +143,11 @@ func (h *Handler) publicarEventoSNS(ag models.Agendamento) {
 	}
 
 	payload, _ := json.Marshal(map[string]interface{}{
-		"evento":      "novo_agendamento",
-		"id":          ag.ID.Hex(),
-		"pet_nome":    ag.PetNome,
-		"servico":     ag.Servico,
-		"data_hora":   ag.DataHora.Format(time.RFC3339),
+		"evento":       "novo_agendamento",
+		"id":           ag.ID.Hex(),
+		"pet_nome":     ag.PetNome,
+		"servico":      ag.Servico,
+		"data_hora":    ag.DataHora.Format(time.RFC3339),
 		"cliente_nome": ag.ClienteNome,
 	})
 
@@ -191,7 +187,8 @@ func (h *Handler) publicarFilaSQS(agID, status string) {
 	}
 }
 
-// invocarLambda invoca a função Lambda para processar o agendamento
+// invocarLambda invoca a função Lambda de forma síncrona para processar o agendamento
+// e loga a resposta retornada pela função
 func (h *Handler) invocarLambda(ag models.Agendamento) {
 	if h.aws.Lambda == nil || h.cfg.LambdaFunctionName == "" {
 		log.Println("Lambda não configurado, pulando invocação")
@@ -206,13 +203,30 @@ func (h *Handler) invocarLambda(ag models.Agendamento) {
 		"data_hora":      ag.DataHora.Format(time.RFC3339),
 	})
 
-	_, err := h.aws.Lambda.Invoke(context.Background(), &lambda.InvokeInput{
+	result, err := h.aws.Lambda.Invoke(context.Background(), &lambda.InvokeInput{
 		FunctionName: aws.String(h.cfg.LambdaFunctionName),
 		Payload:      payload,
 	})
 	if err != nil {
 		log.Printf("Erro ao invocar Lambda: %v", err)
-	} else {
-		log.Printf("Lambda invocada para agendamento %s", ag.ID.Hex())
+		return
+	}
+
+	// Loga o status HTTP retornado pela Lambda
+	log.Printf("Lambda invocada para agendamento %s — StatusCode: %d", ag.ID.Hex(), result.StatusCode)
+
+	// Loga a resposta da Lambda (body JSON)
+	if len(result.Payload) > 0 {
+		var resposta map[string]interface{}
+		if err := json.Unmarshal(result.Payload, &resposta); err == nil {
+			log.Printf("Resposta Lambda: %v", resposta)
+		} else {
+			log.Printf("Payload Lambda (raw): %s", string(result.Payload))
+		}
+	}
+
+	// Se a Lambda reportou erro de função (FunctionError != nil), loga o detalhe
+	if result.FunctionError != nil {
+		log.Printf("Lambda FunctionError para agendamento %s: %s", ag.ID.Hex(), *result.FunctionError)
 	}
 }
