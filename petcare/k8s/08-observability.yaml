@@ -14,8 +14,7 @@ data:
     Comandos úteis:
     kubectl get pods -n petcare
     kubectl logs -n petcare deployment/backend
-    kubectl logs -n petcare deployment/worker
-    kubectl get events -n petcare --sort-by=.metadata.creationTimestamp
+        kubectl get events -n petcare --sort-by=.metadata.creationTimestamp
 
 #Script exemplo caso seja implementado algo para utilizar sistema de observabilidade no backend
 

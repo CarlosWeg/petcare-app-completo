@@ -7,11 +7,11 @@ import (
 )
 
 type Handler struct {
-	db         *mongo.Database
-	aws        *config.AWSClients
-	cfg        *config.Config
-	pets       *mongo.Collection
-	clientes   *mongo.Collection
+	db           *mongo.Database
+	aws          *config.AWSClients
+	cfg          *config.Config
+	pets         *mongo.Collection
+	clientes     *mongo.Collection
 	agendamentos *mongo.Collection
 }
 

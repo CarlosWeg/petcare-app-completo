@@ -61,10 +61,9 @@ func ServicosDisponiveis() []Servico {
 }
 
 type Stats struct {
-	TotalPets          int64   `json:"total_pets"`
-	TotalClientes      int64   `json:"total_clientes"`
-	TotalAgendamentos  int64   `json:"total_agendamentos"`
-	AgendamentosHoje   int64   `json:"agendamentos_hoje"`
-	ReceitaMes         float64 `json:"receita_mes"`
-	CacheHit           bool    `json:"cache_hit"`
+	TotalPets         int64   `json:"total_pets"`
+	TotalClientes     int64   `json:"total_clientes"`
+	TotalAgendamentos int64   `json:"total_agendamentos"`
+	AgendamentosHoje  int64   `json:"agendamentos_hoje"`
+	ReceitaMes        float64 `json:"receita_mes"`
 }

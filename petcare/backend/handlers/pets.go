@@ -56,8 +56,6 @@ func (h *Handler) CreatePet(c *gin.Context) {
 		return
 	}
 
-	// Invalida cache de stats
-
 	c.JSON(http.StatusCreated, pet)
 }
 
@@ -128,5 +126,6 @@ func (h *Handler) DeletePet(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Pet não encontrado"})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "Pet removido"})
 }

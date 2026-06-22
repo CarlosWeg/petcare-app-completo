@@ -29,24 +29,27 @@ def handler(event, context):
 
 def _processar_agendamento_direto(event, project_name, timestamp):
     """Processa agendamento invocado diretamente pelo backend."""
+    evento = event.get("evento", "agendamento_criado")
     agendamento_id = event.get("agendamento_id", "desconhecido")
     servico = event.get("servico", "")
     pet_nome = event.get("pet_nome", "")
     cliente_nome = event.get("cliente_nome", "")
+    status = event.get("status", "pendente")
     data_hora = event.get("data_hora", "")
 
     logger.info(
-        f"Processando agendamento: id={agendamento_id} "
-        f"pet={pet_nome} servico={servico} cliente={cliente_nome}"
+        f"Processando evento={evento} id={agendamento_id} "
+        f"status={status} pet={pet_nome} servico={servico} cliente={cliente_nome}"
     )
 
-    # Aqui poderia: enviar e-mail via SES, registrar no DynamoDB, etc.
     resposta = {
         "agendamento_id": agendamento_id,
+        "evento": evento,
         "status": "processado",
         "mensagem": f"Agendamento de {servico} para {pet_nome} processado com sucesso!",
         "projeto": project_name,
         "processado_em": timestamp,
+        "status_original": status,
     }
 
     logger.info(f"Agendamento {agendamento_id} processado: {json.dumps(resposta)}")

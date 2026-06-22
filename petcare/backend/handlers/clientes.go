@@ -54,6 +54,7 @@ func (h *Handler) CreateCliente(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	c.JSON(http.StatusCreated, cliente)
 }
 
@@ -65,8 +66,6 @@ func (h *Handler) GetStats(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Tenta buscar do cache Redis
-	// Calcula stats do MongoDB
 	totalPets, _ := h.pets.CountDocuments(ctx, bson.M{})
 	totalClientes, _ := h.clientes.CountDocuments(ctx, bson.M{})
 	totalAg, _ := h.agendamentos.CountDocuments(ctx, bson.M{})
@@ -85,12 +84,16 @@ func (h *Handler) GetStats(c *gin.Context) {
 		}},
 		{"$group": bson.M{"_id": nil, "total": bson.M{"$sum": "$preco"}}},
 	}
-	cursor, _ := h.agendamentos.Aggregate(ctx, pipeline)
-	var resultado []struct{ Total float64 `bson:"total"` }
-	cursor.All(ctx, &resultado)
+	cursor, err := h.agendamentos.Aggregate(ctx, pipeline)
 	receita := 0.0
-	if len(resultado) > 0 {
-		receita = resultado[0].Total
+	if err == nil {
+		defer cursor.Close(ctx)
+		var resultado []struct {
+			Total float64 `bson:"total"`
+		}
+		if err := cursor.All(ctx, &resultado); err == nil && len(resultado) > 0 {
+			receita = resultado[0].Total
+		}
 	}
 
 	stats := models.Stats{
@@ -99,11 +102,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 		TotalAgendamentos: totalAg,
 		AgendamentosHoje:  agHoje,
 		ReceitaMes:        receita,
-		CacheHit:          false,
 	}
-
-	// Salva no Redis por 60 segundos
-	data, _ := json.Marshal(stats)
 
 	c.JSON(http.StatusOK, stats)
 }

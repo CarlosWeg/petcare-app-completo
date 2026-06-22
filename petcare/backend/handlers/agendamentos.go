@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -67,13 +68,11 @@ func (h *Handler) CreateAgendamento(c *gin.Context) {
 		return
 	}
 
-	// Invalida cache
-
 	// Publica evento no SNS (async, não bloqueia resposta)
 	go h.publicarEventoSNS(ag)
 
-	// Chama Lambda para processar agendamento (async)
-	go h.invocarLambda(ag)
+	// Chama Lambda para processar o agendamento recém-criado (async)
+	go h.invocarLambda("agendamento_criado", ag)
 
 	c.JSON(http.StatusCreated, ag)
 }
@@ -131,7 +130,13 @@ func (h *Handler) UpdateStatusAgendamento(c *gin.Context) {
 	// Se concluído, publica na fila SQS
 	if body.Status == "concluido" {
 		go h.publicarFilaSQS(id.Hex(), body.Status)
+		go h.invocarLambda("agendamento_concluido", models.Agendamento{
+			ID:        id,
+			Status:    body.Status,
+			UpdatedAt: time.Now(),
+		})
 	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "Status atualizado", "status": body.Status})
 }
 
@@ -143,11 +148,11 @@ func (h *Handler) publicarEventoSNS(ag models.Agendamento) {
 	}
 
 	payload, _ := json.Marshal(map[string]interface{}{
-		"evento":      "novo_agendamento",
-		"id":          ag.ID.Hex(),
-		"pet_nome":    ag.PetNome,
-		"servico":     ag.Servico,
-		"data_hora":   ag.DataHora.Format(time.RFC3339),
+		"evento":       "novo_agendamento",
+		"id":           ag.ID.Hex(),
+		"pet_nome":     ag.PetNome,
+		"servico":      ag.Servico,
+		"data_hora":    ag.DataHora.Format(time.RFC3339),
 		"cliente_nome": ag.ClienteNome,
 	})
 
@@ -188,14 +193,16 @@ func (h *Handler) publicarFilaSQS(agID, status string) {
 }
 
 // invocarLambda invoca a função Lambda para processar o agendamento
-func (h *Handler) invocarLambda(ag models.Agendamento) {
+func (h *Handler) invocarLambda(evento string, ag models.Agendamento) {
 	if h.aws.Lambda == nil || h.cfg.LambdaFunctionName == "" {
 		log.Println("Lambda não configurado, pulando invocação")
 		return
 	}
 
 	payload, _ := json.Marshal(map[string]interface{}{
+		"evento":         evento,
 		"agendamento_id": ag.ID.Hex(),
+		"status":         ag.Status,
 		"servico":        ag.Servico,
 		"pet_nome":       ag.PetNome,
 		"cliente_nome":   ag.ClienteNome,

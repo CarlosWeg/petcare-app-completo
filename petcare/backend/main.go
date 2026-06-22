@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -76,7 +75,7 @@ func main() {
 		// Serviços
 		api.GET("/servicos", h.ListServicos)
 
-		// Stats (MongoDB only)
+		// Stats calculadas diretamente no MongoDB
 		api.GET("/stats", h.GetStats)
 	}
 
@@ -96,9 +95,3 @@ func main() {
 	}
 }
 
-func getEnv(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}

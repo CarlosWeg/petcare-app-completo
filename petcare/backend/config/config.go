@@ -14,16 +14,16 @@ import (
 )
 
 type Config struct {
-	Port              string
-	MongoURI          string
-	MongoDatabase     string
-	AWSRegion         string
-	SQSQueueURL       string
-	SNSTopicARN       string
+	Port               string
+	MongoURI           string
+	MongoDatabase      string
+	AWSRegion          string
+	SQSQueueURL        string
+	SNSTopicARN        string
 	LambdaFunctionName string
-	AWSAccessKeyID    string
-	AWSSecretKey      string
-	AWSSessionToken   string
+	AWSAccessKeyID     string
+	AWSSecretKey       string
+	AWSSessionToken    string
 }
 
 type AWSClients struct {
@@ -34,19 +34,18 @@ type AWSClients struct {
 
 func Load() *Config {
 	return &Config{
-		Port:              getEnv("APP_PORT", "8080"),
-		MongoURI:          getEnv("MONGO_URI", "mongodb://mongodb:27017/petcare"),
-		MongoDatabase:     getEnv("MONGO_DATABASE", "petcare"),
-		AWSRegion:         getEnv("AWS_REGION", "us-east-1"),
-		SQSQueueURL:       getEnv("SQS_QUEUE_URL", ""),
-		SNSTopicARN:       getEnv("SNS_TOPIC_ARN", ""),
+		Port:               getEnv("APP_PORT", "8080"),
+		MongoURI:           getEnv("MONGO_URI", "mongodb://mongodb:27017/petcare"),
+		MongoDatabase:      getEnv("MONGO_DATABASE", "petcare"),
+		AWSRegion:          getEnv("AWS_REGION", "us-east-1"),
+		SQSQueueURL:        getEnv("SQS_QUEUE_URL", ""),
+		SNSTopicARN:        getEnv("SNS_TOPIC_ARN", ""),
 		LambdaFunctionName: getEnv("LAMBDA_FUNCTION_NAME", "petcare-cloud-processar-agendamento"),
-		AWSAccessKeyID:    getEnv("AWS_ACCESS_KEY_ID", ""),
-		AWSSecretKey:      getEnv("AWS_SECRET_ACCESS_KEY", ""),
-		AWSSessionToken:   getEnv("AWS_SESSION_TOKEN", ""),
+		AWSAccessKeyID:     getEnv("AWS_ACCESS_KEY_ID", ""),
+		AWSSecretKey:       getEnv("AWS_SECRET_ACCESS_KEY", ""),
+		AWSSessionToken:    getEnv("AWS_SESSION_TOKEN", ""),
 	}
 }
-
 
 func NewAWSClients(cfg *Config) *AWSClients {
 	var awsCfg aws.Config

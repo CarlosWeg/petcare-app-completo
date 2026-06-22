@@ -3,7 +3,7 @@ import { statsAPI, agendamentosAPI } from '../services/api'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
+  BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
 
 const SERVICO_CORES = {
@@ -26,23 +26,32 @@ export default function Dashboard() {
       agendamentosAPI.list()
     ]).then(([s, ag]) => {
       setStats(s)
-      setAgendamentos(ag)
+      setAgendamentos(Array.isArray(ag) ? ag : [])
+    }).catch(() => {
+      setAgendamentos([])
     }).finally(() => setLoading(false))
   }, [])
 
   // Agrupa agendamentos por serviço para gráfico
-  const porServico = (Array.isArray(agendamentos) ? agendamentos : []).reduce((acc, ag) => {
-    acc[ag.servico] = (acc[ag.servico] || 0) + 1
+  // Garante que chartData seja sempre um array com valores numéricos válidos
+  const agendamentosLista = Array.isArray(agendamentos) ? agendamentos : []
+
+  const porServico = agendamentosLista.reduce((acc, ag) => {
+    const servico = ag.servico || 'outros'
+    acc[servico] = (acc[servico] || 0) + 1
     return acc
   }, {})
-  const chartData = Object.entries(porServico).map(([name, value]) => ({
-    name: name.replace('_', ' '),
-    quantidade: value,
-    fill: SERVICO_CORES[name] || '#7C3AED'
-  }))
 
-  const proximos = agendamentos
-    .filter(a => new Date(a.data_hora) >= new Date() && a.status !== 'cancelado')
+  const chartData = Object.entries(porServico)
+    .map(([name, value]) => ({
+      name: String(name).replace('_', ' '),
+      quantidade: Number(value) || 0,
+      fill: SERVICO_CORES[name] || '#7C3AED'
+    }))
+    .filter(entry => entry.quantidade > 0)
+
+  const proximos = agendamentosLista
+    .filter(a => a.data_hora && new Date(a.data_hora) >= new Date() && a.status !== 'cancelado')
     .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora))
     .slice(0, 5)
 
@@ -55,11 +64,6 @@ export default function Dashboard() {
           <h1 className="page-title">Dashboard</h1>
           <p className="page-subtitle">Visão geral do PetCare</p>
         </div>
-        {stats?.cache_hit && (
-          <span style={{ fontSize: 12, color: '#10B981', background: '#D1FAE5', padding: '4px 10px', borderRadius: 999, fontWeight: 600 }}>
-            ⚡ Dados em MongoDB
-          </span>
-        )}
       </div>
 
       {/* Stat Cards */}
@@ -68,7 +72,7 @@ export default function Dashboard() {
         <StatCard icon="👥" value={stats?.total_clientes ?? 0} label="Clientes" color="#3B82F6" />
         <StatCard icon="📅" value={stats?.total_agendamentos ?? 0} label="Total de Agendamentos" color="#F59E0B" />
         <StatCard icon="📆" value={stats?.agendamentos_hoje ?? 0} label="Agendamentos Hoje" color="#10B981" />
-        <StatCard icon="💰" value={`R$ ${(stats?.receita_mes ?? 0).toFixed(2)}`} label="Receita do Mês" color="#EC4899" />
+        <StatCard icon="💰" value={`R$ ${Number(stats?.receita_mes ?? 0).toFixed(2)}`} label="Receita do Mês" color="#EC4899" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
@@ -84,11 +88,11 @@ export default function Dashboard() {
               <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="quantidade" radius={[4, 4, 0, 0]}>
+                <Bar dataKey="quantidade" radius={[4, 4, 0, 0]} isAnimationActive={false}>
                   {chartData.map((entry, i) => (
-                    <Cell key={i} fill={entry.fill} />
+                    <Cell key={`cell-${i}`} fill={entry.fill} />
                   ))}
                 </Bar>
               </BarChart>
@@ -105,8 +109,8 @@ export default function Dashboard() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
-              {proximos.map(ag => (
-                <div key={ag.id} style={{
+              {proximos.map((ag, i) => (
+                <div key={ag.id || i} style={{
                   display: 'flex', alignItems: 'center', gap: 12,
                   padding: '10px 12px', background: 'var(--bg)', borderRadius: 8
                 }}>
@@ -114,7 +118,7 @@ export default function Dashboard() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{ag.pet_nome || 'Pet'}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                      {ag.servico} · {format(new Date(ag.data_hora), "dd/MM HH:mm", { locale: ptBR })}
+                      {ag.servico} · {ag.data_hora ? format(new Date(ag.data_hora), "dd/MM HH:mm", { locale: ptBR }) : '-'}
                     </div>
                   </div>
                   <span className={`badge badge-${ag.status}`}>{ag.status}</span>
