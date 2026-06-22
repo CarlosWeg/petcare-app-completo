@@ -15,9 +15,11 @@ spec:
       labels:
         app: frontend
     spec:
+      nodeSelector:
+        petcare-role: frontend
       containers:
         - name: frontend
-          image:
+          image: carlosweegeuni/petcare-frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80

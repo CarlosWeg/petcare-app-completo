@@ -15,12 +15,11 @@ spec:
       labels:
         app: petcare-backend
     spec:
+      nodeSelector:
+        petcare-role: backend
       containers:
         - name: petcare-backend
-          # Substitua pelo seu usuário Docker Hub:
-          # docker build -t SEU_USUARIO/petcare-backend:latest ./backend
-          # docker push SEU_USUARIO/petcare-backend:latest
-          image: SEU_USUARIO_DOCKERHUB/petcare-backend:latest
+          image: carlosweegeuni/petcare-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -37,6 +36,11 @@ spec:
                 secretKeyRef:
                   name: petcare-secrets
                   key: MONGO_URI
+            - name: REDIS_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: petcare-config
+                  key: REDIS_ADDR
             - name: SQS_QUEUE_URL
               valueFrom:
                 secretKeyRef:
