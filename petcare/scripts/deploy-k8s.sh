@@ -22,7 +22,7 @@ echo "Aguardando MongoDB ficar pronto..."
 kubectl rollout status deployment/mongodb -n petcare --timeout=180s
 
 echo "Aguardando Backend ficar pronto..."
-kubectl rollout status deployment/backend -n petcare --timeout=180s || true
+kubectl rollout status deployment/petcare-backend -n petcare --timeout=180s || true
 
 echo "Aguardando Frontend ficar pronto..."
 kubectl rollout status deployment/frontend -n petcare --timeout=180s || true
@@ -38,4 +38,4 @@ kubectl get svc -n petcare
 echo ""
 echo "Deploy finalizado."
 echo "Frontend NodePort: http://IP_PUBLICO_DA_EC2:30081"
-echo "Backend NodePort:  http://IP_PUBLICO_DA_EC2:30080"
+echo "Backend interno via frontend proxy: http://IP_PUBLICO_DA_EC2:30081/api"
